@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	domain  = "https://stackoverflow.com/questions/tagged/javascript%20reactjs?sort=Newest&filters=NoAcceptedAnswer&edited=true"
+	domain  = "https://stackoverflow.com"
 )
 
 func main() {
@@ -37,12 +38,16 @@ func main() {
 	defer cancel()
 
 	err := chromedp.Run(ctx,
-		chromedp.Navigate(domain),
+		chromedp.Navigate(domain + "/questions/tagged/javascript%20reactjs?sort=Newest&filters=NoAcceptedAnswer&edited=true"),
 		chromedp.Sleep(6 * time.Second),
 		chromedp.Nodes(".question-hyperlink", &nodes, chromedp.NodeReady),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			// to avoid blocking behavior
-			
+			for _, node := range nodes {
+				url, _ := node.Attribute("href")
+				if strings.HasPrefix(url, "https") == false {
+					fmt.Println(domain + url)
+				}
+			}
 			fmt.Println(len(nodes))
 			return nil
 		}),
