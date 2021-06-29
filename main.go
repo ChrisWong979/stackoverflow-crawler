@@ -2,17 +2,21 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
 )
 
 const (
-	domain  = "https://stackoverflow.com/questions/tagged/javascript%20reactjs?sort=Newest&filters=NoAcceptedAnswer&edited=true/"
+	domain  = "https://stackoverflow.com/questions/tagged/javascript%20reactjs?sort=Newest&filters=NoAcceptedAnswer&edited=true"
 )
 
 func main() {
+	var nodes []*cdp.Node
 	var buf []byte
 
 	ctx := context.Background()
@@ -20,7 +24,7 @@ func main() {
 		chromedp.Flag("headless", false),
 		chromedp.Flag("hide-scrollbars", false),
 		chromedp.Flag("mute-audio", false),
-		chromedp.Flag("auto-open-devtools-for-tabs", true),
+		chromedp.Flag("auto-open-devtools-for-tabs", false),
 		chromedp.UserAgent("Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"),
 	}
 
@@ -34,6 +38,15 @@ func main() {
 
 	err := chromedp.Run(ctx,
 		chromedp.Navigate(domain),
+		chromedp.Sleep(6 * time.Second),
+		chromedp.Nodes(".question-hyperlink", &nodes, chromedp.NodeReady),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			// to avoid blocking behavior
+			
+			fmt.Println(len(nodes))
+			return nil
+		}),
+		chromedp.Sleep(1 * time.Second),
 		chromedp.CaptureScreenshot(&buf),
 	)
 	if err != nil {
